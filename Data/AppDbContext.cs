@@ -8,5 +8,11 @@ namespace CustomerManager.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<ContactNumbers> ContactNumbers { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Ignore<CustomerWithContactNumbersDTO>();
+        }
     }
 }

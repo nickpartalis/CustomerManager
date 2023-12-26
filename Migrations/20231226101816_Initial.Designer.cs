@@ -8,10 +8,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace CustomerManager.Data.Migrations
+namespace CustomerManager.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20231222185434_Initial")]
+    [Migration("20231226101816_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -23,6 +23,37 @@ namespace CustomerManager.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("CustomerManager.Models.ContactNumbers", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("HomeNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("MobileNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("WorkNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
+
+                    b.ToTable("ContactNumbers");
+                });
 
             modelBuilder.Entity("CustomerManager.Models.Customer", b =>
                 {
@@ -46,26 +77,31 @@ namespace CustomerManager.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("HomeNumber")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("MobileNumber")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("WorkNumber")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
                     b.HasKey("Id");
 
                     b.ToTable("Customers");
+                });
+
+            modelBuilder.Entity("CustomerManager.Models.ContactNumbers", b =>
+                {
+                    b.HasOne("CustomerManager.Models.Customer", "Customer")
+                        .WithOne("ContactNumbers")
+                        .HasForeignKey("CustomerManager.Models.ContactNumbers", "CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("CustomerManager.Models.Customer", b =>
+                {
+                    b.Navigation("ContactNumbers")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

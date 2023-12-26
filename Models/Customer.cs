@@ -18,18 +18,6 @@ namespace CustomerManager.Models
         [Display(Name = "Last Name")]
         public string LastName { get; set;}
 
-        [StringLength(30)]
-        [Display(Name = "Home Number")]
-        public string? HomeNumber { get; set; }
-
-        [StringLength(30)]
-        [Display(Name = "Work Number")]
-        public string? WorkNumber { get; set; }
-
-        [StringLength(30)]
-        [Display(Name = "Mobile Phone Number")]
-        public string? MobileNumber { get; set; }
-
         [Required(ErrorMessage = "Address is Required.")]
         [StringLength(150, ErrorMessage = "Address Should not Exceed 150 Characters.")]
         [Display(Name = "Address")]
@@ -39,5 +27,6 @@ namespace CustomerManager.Models
         [EmailAddress(ErrorMessage = "Invalid Email Address.")]
         public string Email { get; set; }
 
+        public ContactNumbers ContactNumbers { get; set; }
     }
 }
