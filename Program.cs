@@ -1,5 +1,9 @@
 using CustomerManager.Data;
+using CustomerManager.DataAccess;
+using CustomerManager.Models;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +17,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IDataAccess, EfDataAccess>();
+
+builder.Services.AddTransient<IValidator<CustomerWithNumbersDTO>, CustomerWithNumbersDTO.Validator>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
@@ -23,7 +31,7 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod();
         });
 });
-
+Console.WriteLine(builder.Configuration["DataAccessType"]);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -12,7 +12,7 @@ namespace CustomerManager.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Ignore<CustomerWithContactNumbersDTO>();
+            modelBuilder.Ignore<CustomerWithNumbersDTO>();
         }
     }
 }

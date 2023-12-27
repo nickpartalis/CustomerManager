@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CustomerManager.Data;
 using CustomerManager.Models;
+using CustomerManager.DataAccess;
+using System.ComponentModel.DataAnnotations;
+using FluentValidation;
+using CustomerManager.Exceptions;
 
 namespace CustomerManager.Controllers
 {
@@ -14,146 +18,104 @@ namespace CustomerManager.Controllers
     [ApiController]
     public class CustomerController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IDataAccess _dataAccess;
+        private readonly IValidator<CustomerWithNumbersDTO> _validator;
 
-        public CustomerController(AppDbContext context)
+        public CustomerController(IDataAccess dataAccess, IValidator<CustomerWithNumbersDTO> validator)
         {
-            _context = context;
+            _dataAccess = dataAccess;
+            _validator = validator;
         }
 
         // GET: api/v1/customers
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CustomerWithContactNumbersDTO>>> GetCustomers()
+        public async Task<ActionResult<IEnumerable<CustomerWithNumbersDTO>>> GetCustomers()
         {
-            var customers = await _context.Customers
-                .Include(c => c.ContactNumbers)
-                .ToListAsync();
-
-            var customerDTOs = customers.Select(customer => new CustomerWithContactNumbersDTO
+            try
             {
-                Id = customer.Id,
-                FirstName = customer.FirstName,
-                LastName = customer.LastName,
-                Address = customer.Address,
-                Email = customer.Email,
-                HomeNumber = customer.ContactNumbers?.HomeNumber,
-                WorkNumber = customer.ContactNumbers?.WorkNumber,
-                MobileNumber = customer.ContactNumbers?.MobileNumber
-            }).ToList();
-
-            return customerDTOs;
+                var customers = await _dataAccess.GetCustomers();
+                return Ok(customers);
+            }
+            catch (Exception)
+            {
+                return new StatusCodeResult(500);
+            }
         }
 
         // GET: api/v1/customers/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<CustomerWithContactNumbersDTO>> GetCustomer(int id)
+        public async Task<ActionResult<CustomerWithNumbersDTO>> GetCustomer(int id)
         {
-            var customer = await _context.Customers
-                .Include(c => c.ContactNumbers)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var customer = await _dataAccess.GetCustomer(id);
 
             if (customer == null)
             {
                 return NotFound();
             }
 
-            var customerDTO = new CustomerWithContactNumbersDTO
-            {
-                Id = customer.Id,
-                FirstName = customer.FirstName,
-                LastName = customer.LastName,
-                Address = customer.Address,
-                Email = customer.Email,
-                HomeNumber = customer.ContactNumbers?.HomeNumber,
-                WorkNumber = customer.ContactNumbers?.WorkNumber,
-                MobileNumber = customer.ContactNumbers?.MobileNumber
-            };
-
-            return customerDTO;
+            return Ok(customer);
         }
 
         // POST: api/v1/customers
         [HttpPost]
-        public async Task<ActionResult<CustomerWithContactNumbersDTO>> PostCustomer(CustomerWithContactNumbersDTO customerDTO)
+        public async Task<ActionResult<CustomerWithNumbersDTO>> PostCustomer(CustomerWithNumbersDTO customerDTO)
         {
-            var customer = new Customer
+            var validationResult = _validator.Validate(customerDTO);
+            if (!validationResult.IsValid)
             {
-                FirstName = customerDTO.FirstName,
-                LastName = customerDTO.LastName,
-                Address = customerDTO.Address,
-                Email = customerDTO.Email
-            };
+                return BadRequest(validationResult.Errors);
+            }
 
-            _context.Customers.Add(customer);
-            await _context.SaveChangesAsync();
-
-            var contactNumbers = new ContactNumbers
+            try
             {
-                HomeNumber = customerDTO.HomeNumber,
-                WorkNumber = customerDTO.WorkNumber,
-                MobileNumber = customerDTO.MobileNumber,
-                CustomerId = customer.Id // Set the correct customer Id
-            };
-
-            _context.ContactNumbers.Add(contactNumbers);
-            await _context.SaveChangesAsync();
-
-            customerDTO.Id = customer.Id;
-            return CreatedAtAction("GetCustomer", new { id = customer.Id }, customerDTO);
+                var customer = await _dataAccess.CreateCustomer(customerDTO);
+                return CreatedAtAction("GetCustomer", new { id = customer.Id }, customer);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // PUT: api/v1/customers/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCustomer(int id, CustomerWithContactNumbersDTO updatedCustomerDTO)
+        public async Task<IActionResult> PutCustomer(int id, CustomerWithNumbersDTO customerDTO)
         {
-            if (id != updatedCustomerDTO.Id)
+            if (id != customerDTO.Id)
             {
                 return BadRequest();
             }
 
-            if (!CustomerExists(id))
+            var validationResult = _validator.Validate(customerDTO);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors);
+            }
+
+            try
+            {
+                var customer = await _dataAccess.UpdateCustomer(id, customerDTO);
+                return Ok(customerDTO);
+            }
+            catch (NotFoundException)
             {
                 return NotFound();
             }
-
-            var existingCustomer = await _context.Customers
-                .Include(c => c.ContactNumbers)
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            _context.Entry(existingCustomer).CurrentValues.SetValues(updatedCustomerDTO);
-            _context.Entry(existingCustomer.ContactNumbers).CurrentValues.SetValues(updatedCustomerDTO);
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
 
-        // DELETE: api/v1/customers/5
+        //DELETE: api/v1/customers/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
+            try
+            {
+                await _dataAccess.DeleteCustomer(id);
+                return NoContent();
+            }
+            catch (NotFoundException)
             {
                 return NotFound();
             }
-
-            var contactNumbers = await _context.ContactNumbers.FirstOrDefaultAsync(cn => cn.CustomerId == id);
-
-            if (contactNumbers != null)
-            {
-                _context.ContactNumbers.Remove(contactNumbers);
-            }
-
-            _context.Customers.Remove(customer);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool CustomerExists(int id)
-        {
-            return _context.Customers.Any(e => e.Id == id);
         }
     }
 }
