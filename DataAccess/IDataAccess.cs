@@ -7,7 +7,7 @@ namespace CustomerManager.DataAccess
         Task<IEnumerable<CustomerWithNumbersDTO>> GetCustomers();
         Task<CustomerWithNumbersDTO?> GetCustomer(int id);
         Task<CustomerWithNumbersDTO> CreateCustomer(CustomerWithNumbersDTO customerDTO);
-        Task<CustomerWithNumbersDTO> UpdateCustomer(int id, CustomerWithNumbersDTO updatedCustomerDTO);
+        Task<CustomerWithNumbersDTO> UpdateCustomer(int id, CustomerWithNumbersDTO customerDTO);
         Task DeleteCustomer(int id);
     }
 }

@@ -95,7 +95,7 @@ namespace CustomerManager.DataAccess
 
             if (customer == null)
             {
-                throw new NotFoundException($"Customer with ID {id} not found."); // TODO: Custom exception
+                throw new NotFoundException($"Customer with ID {id} not found.");
             }
 
             customer.FirstName = customerDTO.FirstName;

@@ -4,6 +4,7 @@ using CustomerManager.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,15 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<IDataAccess, EfDataAccess>();
+var dataAccessType = builder.Configuration["DataAccessType"];
+if (dataAccessType == "EntityFramework")
+{
+    builder.Services.AddScoped<IDataAccess, EfDataAccess>();
+}
+else if (dataAccessType == "SqlStoredProcedures")
+{
+    builder.Services.AddTransient<IDataAccess, SqlDataAccess>(_ => new SqlDataAccess("Data Source=(localdb)\\MSSQLLocalDB;Database=CustomerWebApiDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False"));
+}
 
 builder.Services.AddTransient<IValidator<CustomerWithNumbersDTO>, CustomerWithNumbersDTO.Validator>();
 
@@ -31,7 +40,7 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod();
         });
 });
-Console.WriteLine(builder.Configuration["DataAccessType"]);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
