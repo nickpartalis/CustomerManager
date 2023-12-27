@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTable } from 'react-table';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Table, Container } from 'react-bootstrap'; 
+import { Pencil, Trash, HouseFill, TelephoneFill, PhoneFill } from 'react-bootstrap-icons';
 import customerService from '../services/customerService';
 import CustomerForm from './CustomerForm';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -27,19 +28,37 @@ const CustomerList = () => {
         accessor: (row, index) => index + 1,
       },
       {
-        Header: 'First Name',
-        accessor: 'firstName',
-      },
-      {
         Header: 'Last Name',
         accessor: 'lastName',
       },
       {
+        Header: 'First Name',
+        accessor: 'firstName',
+      },
+      {
         Header: 'Phone',
-        accessor: (row) =>
-          [row.homeNumber, row.workNumber, row.mobileNumber]
-            .filter((number) => number)
-            .join(' '),
+        accessor: (row) => (
+          <div>
+            {row.homeNumber && (
+              <span className="phone align-middle me-2">
+                <HouseFill className="me-1" color="gray"/>
+                {row.homeNumber}
+              </span>
+            )}
+            {row.workNumber && (
+              <span className="phone align-middle me-2">
+                <TelephoneFill className="me-1" color="gray"/>
+                {row.workNumber}
+              </span>
+            )}
+            {row.mobileNumber && (
+              <span className="phone align-middle me-2">
+                <PhoneFill className="me-1" color="gray"/>
+                {row.mobileNumber}
+              </span>
+            )}
+          </div>
+        )
       },
       {
         Header: 'Address',
@@ -54,8 +73,12 @@ const CustomerList = () => {
         accessor: 'id',
         Cell: ({ row }) => (
           <div>
-            <Button variant="primary" onClick={() => openFormModal(row.original)}>Edit</Button>
-            <Button variant="danger" onClick={() => handleDelete(row.original.id)}>Delete</Button>
+            <Button variant="primary" size="sm" className="me-1 pb-2" onClick={() => openFormModal(row.original)}>
+              <Pencil />
+            </Button>
+            <Button variant="danger" size="sm" className="pb-2" onClick={() => handleDelete(row.original.id)}>
+              <Trash />
+            </Button>
           </div>
         ),
       },
@@ -105,76 +128,84 @@ const CustomerList = () => {
   };
 
   return (
-    <div>
-      <h2>Customer List</h2>
-      <Button variant="primary" onClick={() => openFormModal()}>Add Customer</Button>
-      <table {...getTableProps()} style={{ width: '100%' }}>
-        <thead>
-          {headerGroups.map((headerGroup) => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => (
-                <th {...column.getHeaderProps()}>{column.render('Header')}</th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        
-        <tbody {...getTableBodyProps()}>
-          {rows.map((row) => {
-            prepareRow(row);
-            return (
-              <tr {...row.getRowProps()}>
-                {row.cells.map((cell) => (
-                  <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+    <Container className="container">
+      <div className='m-2'>
+        <h2>Customer Manager</h2>
+        <div className="text-end mb-2">
+          <Button Button variant="primary" onClick={() => openFormModal()}>Add Customer</Button>
+        </div>
+        <Table {...getTableProps()} striped bordered hover responsive size="sm">
+          <thead>
+            {headerGroups.map((headerGroup) => (
+              <tr {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map((column) => (
+                  <th {...column.getHeaderProps()}>{column.render('Header')}</th>
                 ))}
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            ))}
+          </thead>
+          
+          <tbody {...getTableBodyProps()}>
+            {rows.map((row) => {
+              prepareRow(row);
+              return (
+                <tr {...row.getRowProps()}>
+                  {row.cells.map((cell) => (
+                    <td {...cell.getCellProps()}
+                      className='align-middle'
+                    >
+                      {cell.render('Cell')}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </Table>
 
-      {/* <Modal isOpen={isModalOpen} onRequestClose={closeModal}>
-        {selectedCustomer && (
-          <CustomerDetails 
-            customer={selectedCustomer}
-            handleClose={closeModal}
-            handleEdit={handleEditClick}
-            handleDelete={handleDelete}
-          />
-        )}
-      </Modal> */}
+        {/* <Modal isOpen={isModalOpen} onRequestClose={closeModal}>
+          {selectedCustomer && (
+            <CustomerDetails 
+              customer={selectedCustomer}
+              handleClose={closeModal}
+              handleEdit={handleEditClick}
+              handleDelete={handleDelete}
+            />
+          )}
+        </Modal> */}
 
-      <Modal show={isFormModalOpen} onHide={closeFormModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>{selectedCustomer ? 'Edit Customer' : 'Add Customer'}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <CustomerForm 
-            initialCustomer={selectedCustomer} 
-            onFormSubmit={handleFormSubmit} 
-            closeModal={closeFormModal}
-          />
-        </Modal.Body>
-      </Modal>
+        <Modal show={isFormModalOpen} onHide={closeFormModal}>
+          <Modal.Header closeButton>
+            <Modal.Title>{selectedCustomer ? 'Edit Customer' : 'Add Customer'}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <CustomerForm 
+              initialCustomer={selectedCustomer} 
+              onFormSubmit={handleFormSubmit} 
+              closeModal={closeFormModal}
+            />
+          </Modal.Body>
+        </Modal>
 
-      <Modal show={isDeleteModalOpen} onHide={() => setIsDeleteModalOpen(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete this customer?
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={confirmDelete}>
-            Delete
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        <Modal show={isDeleteModalOpen} onHide={() => setIsDeleteModalOpen(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirm Delete</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            Are you sure you want to delete this customer?
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="danger" onClick={confirmDelete}>
+              Delete
+            </Button>
+            <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)}>
+              Cancel
+            </Button>
+          </Modal.Footer>
+        </Modal>
 
-    </div>
+      </div>
+    </Container>
   );
 };
 

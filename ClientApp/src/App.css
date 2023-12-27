@@ -2,3 +2,28 @@
   text-align: center;
 }
 
+.row > * {
+  padding-left: 4px;
+}
+
+form .row {
+  margin-bottom: 4px;
+}
+
+.btn {
+  border-radius: 8px;
+}
+
+.error {
+  color: red;
+  font-size: 0.85em;
+}
+
+.error-input {
+  border-color: red;
+}
+
+.phone {
+  font-size: 0.9em;
+  white-space: nowrap;
+}

@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import CustomerList from './components/CustomerList';
-import CustomerForm from './components/CustomerForm';
+// import CustomerForm from './components/CustomerForm';
 import './App.css';
 
 function App() {
@@ -8,7 +8,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<CustomerList />} />
-        <Route path="/customer/new" element={<CustomerForm />} />
+        {/* <Route path="/customer/new" element={<CustomerForm />} /> */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
